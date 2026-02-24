@@ -17,4 +17,4 @@ git remote -v
 ::Push changes to remote repository
 git push origin main
 
-cmd /k
+pause

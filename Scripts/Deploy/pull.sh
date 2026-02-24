@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===== CONFIG =====
-REPO_DIR=$HOME/SNJ-Drone-System
+REPO_DIR=$HOME/deploy/SNJ-Drone-System
 BRANCH="main"
 
 echo "=== SNJ Drone System Update Start ==="
