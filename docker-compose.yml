@@ -1,0 +1,23 @@
+services:
+  yolo-udp:
+    container_name: yolo-udp
+    image: yolo-udp:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host    # ✅ 這行讓 build 階段共用主機網路
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./workspace:/workspace
+    stdin_open: true
+    tty: true
+

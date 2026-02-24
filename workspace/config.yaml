@@ -1,0 +1,8 @@
+rtsp_src: rtsp://192.168.144.64:554/H264
+udp_sink_ip: 192.168.144.105
+udp_sink_port: 5000
+ai_control_local_port: 10000
+
+gimbal:
+  host: "192.168.144.64"
+  port: 8888
