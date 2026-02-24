@@ -474,7 +474,7 @@ class Gimbal_Controller:
         self.sock.connect((HOST, PORT))
 
         # PID controller params (tunable)
-        self.Kp = 250
+        self.Kp = 300
         self.Ki = 50
         self.Kd = 25
         self._int_x = 0.0
