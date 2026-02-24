@@ -20,3 +20,15 @@ if [ $? -ne 0 ]; then
     echo "ERROR: git pull failed"
     exit 1
 fi
+
+# 3. Restart containers
+echo "[2/2] Restart docker containers..."
+
+docker compose restart
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: docker restart failed"
+    exit 1
+fi
+
+echo "=== Deploy OK ==="
