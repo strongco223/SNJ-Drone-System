@@ -476,55 +476,43 @@ class Gimbal_Controller:
     def run(self):
         global lock_xyxy, locked
         while True:
-            if (locked == False):
+            if not locked:
                 time.sleep(0.1)
                 continue
 
             x_ratio = lock_xyxy[0]
             y_ratio = lock_xyxy[1]
 
-            dead_zone = 0.00  # 容許範圍寬度 (0.5 ± 0.1 → 0.4~0.6)
+            dead_zone = 0.00
             center = 0.5
 
             x_offset = x_ratio - center
             y_offset = y_ratio - center
 
-            # 初始化指令
+            # 固定最大輸出
+            max_pan = 128
+            max_tilt = 128
+
             pan = 0
             tilt = 0
 
-            # 參數：最大輸出與比例曲線指數（>1 會在靠近中心時讓輸出更小）
-            max_pan = 128
-            max_tilt = 128
-            exponent = 2.0
-
-            span = 0.5 - dead_zone
-            if span <= 0:
-                span = 0.5
-
-            # ---- X 軸控制 (左右) ----
+            # X 軸 (左右)：超出 dead_zone 即以最大值移動
             abs_x = abs(x_offset)
             if abs_x > dead_zone:
-                sign = 1 if x_offset > 0 else -1
-                scale = (abs_x - dead_zone) / span
-                scale = max(0.0, min(1.0, scale))
-                # 非線性比例：靠近中心時縮小輸出
-                pan = int(sign * max_pan * (scale ** exponent))
+                pan = max_pan if x_offset > 0 else -max_pan
 
-            # ---- Y 軸控制 (上下) ----
+            # Y 軸 (上下)：超出 dead_zone 即以最大值移動，保留上下反向
             abs_y = abs(y_offset)
             if abs_y > dead_zone:
-                sign = 1 if y_offset > 0 else -1
-                scale = (abs_y - dead_zone) / span
-                scale = max(0.0, min(1.0, scale))
-                tilt = int(sign * max_tilt * (scale ** exponent) * -1)  # 保持原本上下反向
+                tilt = -max_tilt if y_offset > 0 else max_tilt
 
             print(pan, tilt)
-            # ---- 發送控制指令 ----
+
             if pan != 0 or tilt != 0:
                 self.send_command(packet_builder.do_joystick(pan, tilt))
             else:
                 print("🟡 目標在中心，不移動")
+
             time.sleep(0.1)
     
     def send_command(self,DATA):
