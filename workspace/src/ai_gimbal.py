@@ -551,6 +551,7 @@ class Gimbal_Controller:
             print(pan, tilt)
 
             if pan != 0 or tilt != 0:
+                self.send_command(packet_builder.switch_sport_model())
                 self.send_command(packet_builder.do_joystick(pan, tilt))
             else:
                 print("🟡 目標在中心，不移動")

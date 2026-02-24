@@ -38,6 +38,10 @@ class packet_builder:
         return packet_builder._build_packet(bytes([0x05,0x02]))
     
     @staticmethod
+    def switch_sport_model():
+        return packet_builder._build_packet(bytes([0x05,0x04,0x01]))
+
+    @staticmethod
     def do_joystick(pan: int ,tilt: int)->bytes:
         def clamp_128(value: int):
             return max(-128, min(128, int(value)))
