@@ -483,7 +483,7 @@ class Gimbal_Controller:
             x_ratio = lock_xyxy[0]
             y_ratio = lock_xyxy[1]
 
-            dead_zone = 0.02  # 容許範圍寬度 (0.5 ± 0.1 → 0.4~0.6)
+            dead_zone = 0.00  # 容許範圍寬度 (0.5 ± 0.1 → 0.4~0.6)
             center = 0.5
 
             x_offset = x_ratio - center
