@@ -475,7 +475,7 @@ class Gimbal_Controller:
 
         # PID controller params (tunable)
         self.Kp = 150.0
-        self.Ki = 40.0
+        self.Ki = 150.0
         self.Kd = 0
         self._int_x = 0.0
         self._int_y = 0.0
