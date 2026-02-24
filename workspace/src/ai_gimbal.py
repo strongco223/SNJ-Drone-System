@@ -473,6 +473,62 @@ class Gimbal_Controller:
         print(f"Connecting to {HOST}:{PORT} ...")
         self.sock.connect((HOST, PORT))
 
+        # PID controller params (tunable)
+        self.Kp = 150.0
+        self.Ki = 0.0
+        self.Kd = 40.0
+        self._int_x = 0.0
+        self._int_y = 0.0
+        self._prev_x = 0.0
+        self._prev_y = 0.0
+        self.pid_dt = 0.1            # seconds (match run loop sleep)
+        self.output_limit = 128     # clamp to gimbal range
+
+        
+
+    def set_pid(self, Kp=None, Ki=None, Kd=None, dt=None, output_limit=None):
+        """Adjust PID parameters at runtime."""
+        if Kp is not None:
+            self.Kp = float(Kp)
+        if Ki is not None:
+            self.Ki = float(Ki)
+        if Kd is not None:
+            self.Kd = float(Kd)
+        if dt is not None:
+            self.pid_dt = float(dt)
+        if output_limit is not None:
+            self.output_limit = int(output_limit)
+
+    def reset_pid(self):
+        """Reset integral and derivative state."""
+        self._int_x = 0.0
+        self._int_y = 0.0
+        self._prev_x = 0.0
+        self._prev_y = 0.0
+
+    def PID(self, error, axis='x'):
+        """
+        PID controller.
+        - error expected in approx. [-0.5, 0.5]
+        - axis: 'x' or 'y' to keep separate state for pan/tilt
+        Returns an int command clamped to [-output_limit, output_limit].
+        """
+        if axis == 'x':
+            self._int_x += error * self.pid_dt
+            deriv = (error - self._prev_x) / self.pid_dt if self.pid_dt > 0 else 0.0
+            self._prev_x = error
+            out = self.Kp * error + self.Ki * self._int_x + self.Kd * deriv
+        else:
+            self._int_y += error * self.pid_dt
+            deriv = (error - self._prev_y) / self.pid_dt if self.pid_dt > 0 else 0.0
+            self._prev_y = error
+            out = self.Kp * error + self.Ki * self._int_y + self.Kd * deriv
+
+        # clamp and return integer
+        out = max(-self.output_limit, min(self.output_limit, out))
+        return int(out)
+
+
     def run(self):
         global lock_xyxy, locked
         while True:
@@ -489,22 +545,8 @@ class Gimbal_Controller:
             x_offset = x_ratio - center
             y_offset = y_ratio - center
 
-            # 固定最大輸出
-            max_pan = 128
-            max_tilt = 128
-
-            pan = 0
-            tilt = 0
-
-            # X 軸 (左右)：超出 dead_zone 即以最大值移動
-            abs_x = abs(x_offset)
-            if abs_x > dead_zone:
-                pan = max_pan if x_offset > 0 else -max_pan
-
-            # Y 軸 (上下)：超出 dead_zone 即以最大值移動，保留上下反向
-            abs_y = abs(y_offset)
-            if abs_y > dead_zone:
-                tilt = -max_tilt if y_offset > 0 else max_tilt
+            pan = self.PID(x_offset, axis='x')
+            tilt = self.PID(y_offset, axis='y')
 
             print(pan, tilt)
 
