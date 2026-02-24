@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-REPO_DIR="~/deploy/SNJ-Drone-System"
+REPO_DIR=$HOME/deploy/SNJ-Drone-System
 
 # 3. Restart containers
 echo "[2/2] Restart docker containers..."
