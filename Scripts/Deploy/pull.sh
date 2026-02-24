@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===== CONFIG =====
-REPO_DIR="$HOME/docker/gimbal_detection_system/SNJ-Drone-System"
+REPO_DIR="~/deploy/SNJ-Drone-System"
 BRANCH="main"
 
 echo "=== SNJ Drone System Update Start ==="
