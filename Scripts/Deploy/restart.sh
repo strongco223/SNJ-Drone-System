@@ -1,4 +1,7 @@
-REPO_DIR="$HOME/docker/gimbal_detection_system/SNJ-Drone-System"
+#!/bin/bash
+
+
+REPO_DIR="~/deploy/SNJ-Drone-System"
 
 # 3. Restart containers
 echo "[2/2] Restart docker containers..."
