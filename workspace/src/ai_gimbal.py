@@ -543,7 +543,7 @@ class Gimbal_Controller:
             center = 0.5
 
             x_offset = x_ratio - center
-            y_offset = y_ratio - center
+            y_offset = -(y_ratio - center)
 
             pan = self.PID(x_offset, axis='x')
             tilt = self.PID(y_offset, axis='y')
