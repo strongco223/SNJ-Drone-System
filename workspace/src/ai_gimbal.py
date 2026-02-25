@@ -537,7 +537,7 @@ class Gimbal_Controller:
         self.y_ff_gain = FeedforwardGain(gain=200.0, max_output=150.0, alpha=0.3)
 
         # PID controller params (tunable)
-        self.Kp = 400
+        self.Kp = 600
         self.Ki = 0
         self.Kd = 25
         self._int_x = 0.0
