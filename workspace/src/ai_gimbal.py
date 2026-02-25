@@ -23,7 +23,7 @@ import json
 # gimbal
 from packet import packet_builder
 
-model = YOLO("yolo11n.engine")
+model = YOLO("yolo11n.pt")
 output_fps = 30
 frame_duration = 1 / output_fps * Gst.SECOND  # 30fps
 frame_count = 0
@@ -253,7 +253,7 @@ class rtsp_ai_pipline:
             handle_time = (in_end_time - in_start_time)*1000
             start_time = end_time
             print(f"output fps：{fps:.1f}")
-            print(f"cycle time:{handle_time:1f} ms")
+            print(f"cycle time:{handle_time:.1f} ms")
             print(f"ai time：{infer_time:.1f} ms")
 
             
