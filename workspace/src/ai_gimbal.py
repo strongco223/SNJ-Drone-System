@@ -538,7 +538,7 @@ class Gimbal_Controller:
 
         # PID controller params (tunable)
         self.Kp = 400
-        self.Ki = 50
+        self.Ki = 0
         self.Kd = 25
         self._int_x = 0.0
         self._int_y = 0.0
@@ -617,10 +617,10 @@ class Gimbal_Controller:
             x_pid_value = self.PID(x_offset, axis='x')
             y_pid_value = self.PID(y_offset, axis='y')
 
-            pan = x_pid_value - x_gain_value  # pan 正向
-            tilt = -y_pid_value + y_gain_value # tilt 反向
+            pan = x_pid_value #- x_gain_value  # pan 正向
+            tilt = -y_pid_value #+ y_gain_value # tilt 反向
             
-            print(f"PID pan: {pan}, tilt: {tilt} | FF pan: {x_gain_value:.1f}, tilt: {y_gain_value:.1f}")
+            print(f"PID pan: {pan}, tilt: {tilt} | FF pan: {x_gain_value:.1f}, tilt: {y_gain_value:.1f} | PID out pan: {x_pid_value}, tilt: {y_pid_value}")
 
 
             if pan != 0 or tilt != 0:
