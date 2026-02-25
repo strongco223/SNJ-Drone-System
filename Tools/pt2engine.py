@@ -27,4 +27,4 @@ if __name__ == "__main__":
     pt_to_trt(input_path, img_w, img_h)
 
     # example usage:
-    # python pt2engine.py ../workspace/yolo11n.pt 960 540 
+    # python pt2engine.py ../yolo11n.pt 960 540 
