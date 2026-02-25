@@ -95,5 +95,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # RUN pip install --no-cache-dir --no-build-isolation lap==0.4.0
 
 
-CMD ["python3", "main.py"]
+#CMD ["python3", "main.py"]
 
