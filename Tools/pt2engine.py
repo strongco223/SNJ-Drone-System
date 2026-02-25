@@ -8,7 +8,7 @@ def pt_to_trt(pt_path: str, img_w: int, img_h: int):
     model.export(
         format="engine",
         imgsz=(img_h, img_w),  # Ultralytics 使用 (H, W)
-        half=False,            # FP32
+        half=True,            # FP32
         device=0,
         project="output",
         name="trt_model"
