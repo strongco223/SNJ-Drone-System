@@ -23,7 +23,7 @@ import json
 # gimbal
 from packet import packet_builder
 
-model = YOLO("yolo11n.pt")
+model = YOLO("yolo11n.engine")
 output_fps = 30
 frame_duration = 1 / output_fps * Gst.SECOND  # 30fps
 frame_count = 0
@@ -208,8 +208,8 @@ class rtsp_ai_pipline:
         if frame is not None:
             #frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
             frame_bgr = frame[:, :, :3]
-            resized_frame = cv2.resize(frame_bgr, (960, 540))
-            # (960, 540)
+            resized_frame = cv2.resize(frame_bgr, (960, 544))
+            # (960, 540) # tensorRT (960,544)
             resized_frame = resized_frame[:,:,:3]
             
             start_infer = time.time()
@@ -322,7 +322,7 @@ class udp_pipline:
     def _parsePipeline(self):
         self.pipeline = Gst.parse_launch(self.pipeline_str)
         self.appsrc = self.pipeline.get_by_name("mysrc")
-        caps = Gst.Caps.from_string(f"video/x-raw,format=BGR,width=960,height=540,framerate={output_fps:.0f}/1")
+        caps = Gst.Caps.from_string(f"video/x-raw,format=BGR,width=960,height=544,framerate={output_fps:.0f}/1")
         self.appsrc.set_property("caps", caps)
         self.appsrc.set_property("format", Gst.Format.TIME)
     def setStart(self):
