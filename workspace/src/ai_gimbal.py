@@ -23,7 +23,7 @@ import json
 # gimbal
 from packet import packet_builder
 
-model = YOLO("yolo11n.pt")
+model = YOLO("yolo11n.engine")
 output_fps = 30
 frame_duration = 1 / output_fps * Gst.SECOND  # 30fps
 frame_count = 0
@@ -595,40 +595,6 @@ class Gimbal_Controller:
         out = max(-self.output_limit, min(self.output_limit, out))
         return int(out)
 
-    
-        """
-        前饋控制：根據物件位置計算像素移動速度
-        使用低通濾波器平滑速度輸出
-        """
-        # 中心點偏移
-        
-        
-        # 前饋增益（可調參數）
-        feedforward_gain = 200
-        
-        # 計算目標速度（像素/秒）
-        target_x_speed = x_offset * feedforward_gain
-        target_y_speed = y_offset * feedforward_gain
-        
-        # 低通濾波係數 (0.0~1.0, 越小濾波越強)
-        alpha = 0.3
-        
-        # 初始化濾波狀態
-        if not hasattr(self, '_filtered_x_speed'):
-            self._filtered_x_speed = 0.0
-            self._filtered_y_speed = 0.0
-        
-        # 一階低通濾波
-        self._filtered_x_speed = alpha * target_x_speed + (1 - alpha) * self._filtered_x_speed
-        self._filtered_y_speed = alpha * target_y_speed + (1 - alpha) * self._filtered_y_speed
-        
-        # 速度限制
-        max_speed = 150
-        x_speed = max(-max_speed, min(max_speed, int(self._filtered_x_speed)))
-        y_speed = max(-max_speed, min(max_speed, int(self._filtered_y_speed)))
-        
-        return x_speed, y_speed
-
     def run(self):
         global lock_xyxy, locked
         while True:
@@ -648,8 +614,11 @@ class Gimbal_Controller:
             x_gain_value = self.x_ff_gain.output(x_ratio)
             y_gain_value = self.y_ff_gain.output(y_ratio)
 
-            pan = self.PID(x_offset, axis='x') + x_gain_value  # pan 正向
-            tilt = -self.PID(y_offset, axis='y') - y_gain_value # tilt 反向
+            x_pid_value = self.PID(x_offset, axis='x')
+            y_pid_value = self.PID(y_offset, axis='y')
+
+            pan = x_pid_value - x_gain_value  # pan 正向
+            tilt = -y_pid_value + y_gain_value # tilt 反向
             
             print(f"PID pan: {pan}, tilt: {tilt} | FF pan: {x_gain_value:.1f}, tilt: {y_gain_value:.1f}")
 
