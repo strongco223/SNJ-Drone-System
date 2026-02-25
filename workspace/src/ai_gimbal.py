@@ -464,6 +464,66 @@ class AI_Control_Server:
             handler_t.start()
 
 
+class FeedforwardGain:
+    def __init__(self, gain=200.0, max_output=150.0, alpha=0.3):
+        """
+        gain        : feedforward gain (Kff)
+        max_output  : clamp of final output command
+        alpha       : low-pass filter factor (0~1)
+        """
+        self.gain = gain
+        self.max_output = max_output
+        self.alpha = alpha
+
+        self.last_position = None
+        self.last_time = None
+        self._filtered_speed = 0.0
+
+    def calculate_speed(self, position):
+        now = time.perf_counter()
+
+        # first frame protection
+        if self.last_position is None:
+            self.last_position = position
+            self.last_time = now
+            return 0.0
+
+        # --- dt ---
+        dt = now - self.last_time
+
+        # dt clamp (avoid spike)
+        dt_min = 0.005
+        dt_max = 0.15
+        dt = max(dt_min, min(dt, dt_max))
+
+        # --- raw speed ---
+        raw_speed = (position - self.last_position) / dt
+
+        # --- low-pass filter ---
+        self._filtered_speed = (
+            (1.0 - self.alpha) * self._filtered_speed
+            + self.alpha * raw_speed
+        )
+
+        # update state
+        self.last_position = position
+        self.last_time = now
+
+        return self._filtered_speed
+
+    def output(self, position):
+        speed = self.calculate_speed(position)
+
+        # feedforward output
+        output = self.gain * speed
+
+        # clamp final output
+        output = max(-self.max_output, min(output, self.max_output))
+
+        return output
+        
+
+
 class Gimbal_Controller:
     def __init__(self,HOST,PORT):
         global lock_xyxy, locked
@@ -472,6 +532,9 @@ class Gimbal_Controller:
         #PORT = 8888
         print(f"Connecting to {HOST}:{PORT} ...")
         self.sock.connect((HOST, PORT))
+
+        self.x_ff_gain = FeedforwardGain(gain=200.0, max_output=150.0, alpha=0.3)
+        self.y_ff_gain = FeedforwardGain(gain=200.0, max_output=150.0, alpha=0.3)
 
         # PID controller params (tunable)
         self.Kp = 400
@@ -483,6 +546,10 @@ class Gimbal_Controller:
         self._prev_y = 0.0
         self.pid_dt = 0.1            # seconds (match run loop sleep)
         self.output_limit = 128     # clamp to gimbal range
+
+        self.osc_timer = time.time()
+        self.osc_last_x = 0
+        self.osc_last_y = 0
 
         
 
@@ -528,6 +595,39 @@ class Gimbal_Controller:
         out = max(-self.output_limit, min(self.output_limit, out))
         return int(out)
 
+    
+        """
+        前饋控制：根據物件位置計算像素移動速度
+        使用低通濾波器平滑速度輸出
+        """
+        # 中心點偏移
+        
+        
+        # 前饋增益（可調參數）
+        feedforward_gain = 200
+        
+        # 計算目標速度（像素/秒）
+        target_x_speed = x_offset * feedforward_gain
+        target_y_speed = y_offset * feedforward_gain
+        
+        # 低通濾波係數 (0.0~1.0, 越小濾波越強)
+        alpha = 0.3
+        
+        # 初始化濾波狀態
+        if not hasattr(self, '_filtered_x_speed'):
+            self._filtered_x_speed = 0.0
+            self._filtered_y_speed = 0.0
+        
+        # 一階低通濾波
+        self._filtered_x_speed = alpha * target_x_speed + (1 - alpha) * self._filtered_x_speed
+        self._filtered_y_speed = alpha * target_y_speed + (1 - alpha) * self._filtered_y_speed
+        
+        # 速度限制
+        max_speed = 150
+        x_speed = max(-max_speed, min(max_speed, int(self._filtered_x_speed)))
+        y_speed = max(-max_speed, min(max_speed, int(self._filtered_y_speed)))
+        
+        return x_speed, y_speed
 
     def run(self):
         global lock_xyxy, locked
@@ -543,12 +643,16 @@ class Gimbal_Controller:
             center = 0.5
 
             x_offset = x_ratio - center
-            y_offset = -(y_ratio - center)
+            y_offset = y_ratio - center
 
-            pan = self.PID(x_offset, axis='x')
-            tilt = self.PID(y_offset, axis='y')
+            x_gain_value = self.x_ff_gain.output(x_ratio)
+            y_gain_value = self.y_ff_gain.output(y_ratio)
 
-            print(pan, tilt)
+            pan = self.PID(x_offset, axis='x') + x_gain_value  # pan 正向
+            tilt = -self.PID(y_offset, axis='y') - y_gain_value # tilt 反向
+            
+            print(f"PID pan: {pan}, tilt: {tilt} | FF pan: {x_gain_value:.1f}, tilt: {y_gain_value:.1f}")
+
 
             if pan != 0 or tilt != 0:
                 self.send_command(packet_builder.switch_sport_model())
