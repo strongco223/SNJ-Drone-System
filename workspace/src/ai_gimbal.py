@@ -23,7 +23,7 @@ import json
 # gimbal
 from packet import packet_builder
 
-model = YOLO("yolo11n.engine")
+model = YOLO("yolo11n.pt")
 output_fps = 30
 frame_duration = 1 / output_fps * Gst.SECOND  # 30fps
 frame_count = 0
